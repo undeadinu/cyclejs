@@ -28,6 +28,10 @@ export class MockedDOMSource implements DOMSource {
     return out;
   }
 
+  public element(): any {
+    return this.elements().map((arr: any[]) => arr[0]);
+  }
+
   public events(eventType: string, options?: EventsFnOptions): any {
     const streamForEventType = this._mockConfig[eventType] as any;
     const out: DevToolEnabledSource & FantasyObservable = adapt(

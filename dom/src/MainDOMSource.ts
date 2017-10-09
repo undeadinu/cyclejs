@@ -134,6 +134,10 @@ export class MainDOMSource implements DOMSource {
     return out;
   }
 
+  public element(): MemoryStream<Element> {
+    return this.elements().map(arr => arr[0]);
+  }
+
   get namespace(): Array<string> {
     return this._namespace;
   }

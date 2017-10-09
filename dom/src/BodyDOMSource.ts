@@ -12,12 +12,16 @@ export class BodyDOMSource implements DOMSource {
     return this;
   }
 
-  public elements(): MemoryStream<HTMLBodyElement> {
-    const out: DevToolEnabledSource & MemoryStream<HTMLBodyElement> = adapt(
-      xs.of(document.body),
+  public elements(): MemoryStream<HTMLBodyElement[]> {
+    const out: DevToolEnabledSource & MemoryStream<HTMLBodyElement[]> = adapt(
+      xs.of([document.body]),
     );
     out._isCycleSource = this._name;
     return out;
+  }
+
+  public element(): MemoryStream<HTMLBodyElement> {
+    return this.elements().map(arr => arr[0]);
   }
 
   public events(

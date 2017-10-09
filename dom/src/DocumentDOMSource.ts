@@ -12,12 +12,16 @@ export class DocumentDOMSource implements DOMSource {
     return this;
   }
 
-  public elements(): MemoryStream<Document> {
-    const out: DevToolEnabledSource & MemoryStream<Document> = adapt(
-      xs.of(document),
+  public elements(): MemoryStream<Document[]> {
+    const out: DevToolEnabledSource & MemoryStream<Document[]> = adapt(
+      xs.of([document]),
     );
     out._isCycleSource = this._name;
     return out;
+  }
+
+  public element(): MemoryStream<Document> {
+    return this.elements().map(arr => arr[0]);
   }
 
   public events(

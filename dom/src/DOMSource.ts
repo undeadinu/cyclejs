@@ -8,8 +8,9 @@ export interface EventsFnOptions {
 export interface DOMSource {
   select(selector: string): DOMSource;
   elements(): MemoryStream<
-    Document | HTMLBodyElement | Array<Element> | string
+    Document[] | HTMLBodyElement[] | Array<Element> | string
   >;
+  element(): MemoryStream<Document | HTMLBodyElement | Element>;
   events<K extends keyof HTMLElementEventMap>(
     eventType: K,
     options?: EventsFnOptions,
