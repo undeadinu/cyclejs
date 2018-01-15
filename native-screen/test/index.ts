@@ -3,7 +3,7 @@ import * as React from 'react';
 import xs from 'xstream';
 import * as ReactNative from 'react-native';
 import {setup} from '@cycle/run';
-import {makeScreenDriver, ListView, ScreenSource, h} from '../lib/index';
+import {makeScreenDriver, ListView, ScreenSource, h} from '../lib/cjs/index';
 import {shallow} from 'enzyme';
 const assert = require('assert');
 const {
@@ -38,7 +38,11 @@ describe('Screen driver', function() {
         next: (vdom: React.ReactElement<any>) => {
           const wrapper = shallow(React.createElement(() => vdom));
           assert.strictEqual(
-            wrapper.childAt(0).childAt(0).childAt(0).text(),
+            wrapper
+              .childAt(0)
+              .childAt(0)
+              .childAt(0)
+              .text(),
             `${turn}`,
           );
           setTimeout(() => wrapper.simulate('press'));
@@ -75,7 +79,11 @@ describe('Screen driver', function() {
         next: (vdom: React.ReactElement<any>) => {
           const wrapper = shallow(React.createElement(() => vdom));
           assert.strictEqual(
-            wrapper.childAt(0).childAt(0).childAt(0).text(),
+            wrapper
+              .childAt(0)
+              .childAt(0)
+              .childAt(0)
+              .text(),
             `${turn}`,
           );
           setTimeout(() => wrapper.simulate('press'));
@@ -112,7 +120,11 @@ describe('Screen driver', function() {
         next: (vdom: React.ReactElement<any>) => {
           const wrapper = shallow(React.createElement(() => vdom));
           assert.strictEqual(
-            wrapper.childAt(0).childAt(0).childAt(0).text(),
+            wrapper
+              .childAt(0)
+              .childAt(0)
+              .childAt(0)
+              .text(),
             `${turn}`,
           );
           setTimeout(() => wrapper.simulate('press'));
@@ -149,7 +161,11 @@ describe('Screen driver', function() {
         next: (vdom: React.ReactElement<any>) => {
           const wrapper = shallow(React.createElement(() => vdom));
           assert.strictEqual(
-            wrapper.childAt(0).childAt(0).childAt(0).text(),
+            wrapper
+              .childAt(0)
+              .childAt(0)
+              .childAt(0)
+              .text(),
             `${turn}`,
           );
           setTimeout(() => wrapper.simulate('press'));
@@ -194,17 +210,20 @@ describe('Screen driver', function() {
           assert.strictEqual(JSON.stringify(dataBlob[0]), '{"name":"Alice"}');
         },
       });
-      endlessSink$.drop(1).take(1).addListener({
-        next: vdom => {
-          const wrapper = shallow(vdom);
-          const dataBlob =
-            wrapper['renderer']._instance.state.dataSource._dataBlob;
-          assert.strictEqual(dataBlob.length, 2);
-          assert.strictEqual(JSON.stringify(dataBlob[0]), '{"name":"Alice"}');
-          assert.strictEqual(JSON.stringify(dataBlob[1]), '{"name":"Bob"}');
-          done();
-        },
-      });
+      endlessSink$
+        .drop(1)
+        .take(1)
+        .addListener({
+          next: vdom => {
+            const wrapper = shallow(vdom);
+            const dataBlob =
+              wrapper['renderer']._instance.state.dataSource._dataBlob;
+            assert.strictEqual(dataBlob.length, 2);
+            assert.strictEqual(JSON.stringify(dataBlob[0]), '{"name":"Alice"}');
+            assert.strictEqual(JSON.stringify(dataBlob[1]), '{"name":"Bob"}');
+            done();
+          },
+        });
 
       run();
     });
