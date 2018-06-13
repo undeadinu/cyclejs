@@ -1,231 +1,105 @@
 import 'mocha';
+import * as renderer from 'react-test-renderer';
 import * as React from 'react';
-import xs from 'xstream';
+import xs, {Stream} from 'xstream';
 import * as ReactNative from 'react-native';
-import {setup} from '@cycle/run';
-import {makeScreenDriver, ListView, ScreenSource, h} from '../lib/cjs/index';
-import {shallow} from 'enzyme';
+import {run} from '@cycle/run';
+import {ScreenSource, h, makeComponent, ContextData} from '../src/index';
 const assert = require('assert');
-const {
-  View,
-  Text,
-  TouchableHighlight,
-  TouchableNativeFeedback,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-} = ReactNative;
+const {View, Text} = ReactNative;
 
-describe('Screen driver', function() {
-  describe('with TouchableOpacity', function() {
-    it('should allow using source . select . events', function(done) {
-      function main(sources: {Screen: ScreenSource}) {
-        const inc$ = sources.Screen.select('button').events('press');
-        const count$ = inc$.fold((acc: number, x: any) => acc + 1, 0);
-        const vdom$ = count$.map((i: number) =>
-          h(TouchableOpacity, {selector: 'button'}, [
-            h(View, [h(Text, {}, '' + i)]),
-          ]),
-        );
-        return {Screen: vdom$};
-      }
+class Touchable extends React.PureComponent<any, any> {
+  public press() {
+    if (this.props.onPress) {
+      this.props.onPress(null);
+    }
+  }
 
-      const {sinks, run} = setup(main, {
-        Screen: makeScreenDriver('example'),
-      });
+  public render() {
+    return this.props.children;
+  }
+}
 
+describe('makeComponent', function() {
+  it('converts an MVI Cycle app into a React component', function(done) {
+    function main(sources: {Screen: ScreenSource}) {
+      const inc$ = sources.Screen.select('button').events('press');
+      const count$ = inc$.fold((acc: number, x: any) => acc + 1, 0);
+      const vdom$ = count$.map((i: number) =>
+        h(Touchable, {selector: 'button'}, [h(View, [h(Text, {}, '' + i)])]),
+      );
+      return {Screen: vdom$};
+    }
+
+    function testDriver(vdom$: Stream<React.ReactElement<any>>) {
       let turn = 0;
-      sinks.Screen.take(3).addListener({
-        next: (vdom: React.ReactElement<any>) => {
-          const wrapper = shallow(React.createElement(() => vdom));
-          assert.strictEqual(
-            wrapper
-              .childAt(0)
-              .childAt(0)
-              .childAt(0)
-              .text(),
-            `${turn}`,
-          );
-          setTimeout(() => wrapper.simulate('press'));
-          turn++;
-          if (turn === 3) {
-            done();
-          }
-        },
-      });
+      const ctx = new ContextData();
+      const RootComponent = makeComponent(vdom$, ctx);
+      const r = renderer.create(React.createElement(RootComponent));
+      const root = r.root;
+      const check = () => {
+        const to = root.findByType(Touchable);
+        const view = to.props.children;
+        const text = view.props.children;
+        assert.strictEqual(text.props.children, `${turn}`);
+        to.instance.press();
+        turn++;
+        if (turn === 3) {
+          done();
+        }
+      };
+      setTimeout(check, 50);
+      setTimeout(check, 100);
+      setTimeout(check, 150);
+      return new ScreenSource(ctx);
+    }
 
-      run();
-    });
+    run(main, {Screen: testDriver});
   });
 
-  describe('with TouchableNativeFeedback', function() {
-    it('should allow using source . select . events', function(done) {
-      function main(sources: any) {
-        const inc$ = sources.Screen.select('button').events('press');
-        const count$ = inc$.fold((acc: number, x: any) => acc + 1, 0);
-        const vdom$ = count$.map((i: number) =>
-          h(TouchableNativeFeedback, {selector: 'button'}, [
-            h(View, [h(Text, '' + i)]),
-          ]),
-        );
-        return {Screen: vdom$};
-      }
-
-      const {sinks, run} = setup(main, {
-        Screen: makeScreenDriver('example'),
+  it('no synchronous race conditions with handler registration', done => {
+    function main(sources: {Screen: ScreenSource}) {
+      const inc$ = xs.create({
+        start(listener: any) {
+          setTimeout(() => {
+            sources.Screen
+              .select('button')
+              .events('press')
+              .addListener(listener);
+          }, 30);
+        },
+        stop() {},
       });
+      const count$ = inc$.fold((acc: number, x: any) => acc + 1, 0);
+      const vdom$ = count$.map((i: number) =>
+        h(Touchable, {selector: 'button'}, [h(View, [h(Text, {}, '' + i)])]),
+      );
+      return {Screen: vdom$};
+    }
 
+    function testDriver(vdom$: Stream<React.ReactElement<any>>) {
       let turn = 0;
-      sinks.Screen.take(3).addListener({
-        next: (vdom: React.ReactElement<any>) => {
-          const wrapper = shallow(React.createElement(() => vdom));
-          assert.strictEqual(
-            wrapper
-              .childAt(0)
-              .childAt(0)
-              .childAt(0)
-              .text(),
-            `${turn}`,
-          );
-          setTimeout(() => wrapper.simulate('press'));
-          turn++;
-          if (turn === 3) {
-            done();
-          }
-        },
-      });
+      const ctx = new ContextData();
+      const RootComponent = makeComponent(vdom$, ctx);
+      const r = renderer.create(React.createElement(RootComponent));
+      const root = r.root;
+      const check = () => {
+        const to = root.findByType(Touchable);
+        const view = to.props.children;
+        const text = view.props.children;
+        assert.strictEqual(text.props.children, `${turn}`);
+        to.instance.press();
+        turn++;
+        if (turn === 3) {
+          done();
+        }
+      };
+      setTimeout(check, 100);
+      setTimeout(check, 150);
+      setTimeout(check, 200);
+      return new ScreenSource(ctx);
+    }
 
-      run();
-    });
-  });
-
-  describe('with TouchableHighlight', function() {
-    it('should allow using source . select . events', function(done) {
-      function main(sources: any) {
-        const inc$ = sources.Screen.select('button').events('press');
-        const count$ = inc$.fold((acc: number, x: any) => acc + 1, 0);
-        const vdom$ = count$.map((i: number) =>
-          h(TouchableHighlight, {selector: 'button'}, [
-            h(View, [h(Text, '' + i)]),
-          ]),
-        );
-        return {Screen: vdom$};
-      }
-
-      const {sinks, run} = setup(main, {
-        Screen: makeScreenDriver('example'),
-      });
-
-      let turn = 0;
-      sinks.Screen.take(3).addListener({
-        next: (vdom: React.ReactElement<any>) => {
-          const wrapper = shallow(React.createElement(() => vdom));
-          assert.strictEqual(
-            wrapper
-              .childAt(0)
-              .childAt(0)
-              .childAt(0)
-              .text(),
-            `${turn}`,
-          );
-          setTimeout(() => wrapper.simulate('press'));
-          turn++;
-          if (turn === 3) {
-            done();
-          }
-        },
-      });
-
-      run();
-    });
-  });
-
-  describe('with TouchableWithoutFeedback', function() {
-    it('should allow using source . select . events', function(done) {
-      function main(sources: any) {
-        const inc$ = sources.Screen.select('button').events('press');
-        const count$ = inc$.fold((acc: number, x: any) => acc + 1, 0);
-        const vdom$ = count$.map((i: number) =>
-          h(TouchableWithoutFeedback, {selector: 'button'}, [
-            h(View, [h(Text, '' + i)]),
-          ]),
-        );
-        return {Screen: vdom$};
-      }
-
-      const {sinks, run} = setup(main, {
-        Screen: makeScreenDriver('example'),
-      });
-
-      let turn = 0;
-      sinks.Screen.take(3).addListener({
-        next: (vdom: React.ReactElement<any>) => {
-          const wrapper = shallow(React.createElement(() => vdom));
-          assert.strictEqual(
-            wrapper
-              .childAt(0)
-              .childAt(0)
-              .childAt(0)
-              .text(),
-            `${turn}`,
-          );
-          setTimeout(() => wrapper.simulate('press'));
-          turn++;
-          if (turn === 3) {
-            done();
-          }
-        },
-      });
-
-      run();
-    });
-  });
-
-  describe('with ListView', function() {
-    it('should evolve over time', function(done) {
-      function main(sources: any) {
-        const persons$ = xs
-          .periodic(100)
-          .take(2)
-          .map(i => [[{name: 'Alice'}], [{name: 'Alice'}, {name: 'Bob'}]][i]);
-        const vdom$ = persons$.map(persons =>
-          h(ListView, {
-            items: persons,
-            renderRow: (item: any) => h(View, [h(Text, item.name)]),
-          }),
-        );
-        return {Screen: vdom$};
-      }
-
-      const {sinks, run} = setup(main, {
-        Screen: makeScreenDriver('example'),
-      });
-
-      const endlessSink$ = xs.merge(sinks.Screen, xs.never());
-      endlessSink$.take(1).addListener({
-        next: vdom => {
-          const wrapper = shallow(vdom);
-          const dataBlob =
-            wrapper['renderer']._instance.state.dataSource._dataBlob;
-          assert.strictEqual(dataBlob.length, 1);
-          assert.strictEqual(JSON.stringify(dataBlob[0]), '{"name":"Alice"}');
-        },
-      });
-      endlessSink$
-        .drop(1)
-        .take(1)
-        .addListener({
-          next: vdom => {
-            const wrapper = shallow(vdom);
-            const dataBlob =
-              wrapper['renderer']._instance.state.dataSource._dataBlob;
-            assert.strictEqual(dataBlob.length, 2);
-            assert.strictEqual(JSON.stringify(dataBlob[0]), '{"name":"Alice"}');
-            assert.strictEqual(JSON.stringify(dataBlob[1]), '{"name":"Bob"}');
-            done();
-          },
-        });
-
-      run();
-    });
+    run(main, {Screen: testDriver});
   });
 });

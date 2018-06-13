@@ -11,8 +11,7 @@
  * @return {Function} the Screen driver function.
  * @function makeScreenDriver
  */
-export {makeScreenDriver} from './driver';
+export {makeScreenDriver, makeComponent} from './driver';
+export {ContextData} from './context';
 export {ScreenSource} from './ScreenSource';
 export {h} from './h';
-export {Image, Text, View} from './Animated';
-export {ListView} from './ListView';
