@@ -12,6 +12,6 @@
  * @function makeScreenDriver
  */
 export {makeScreenDriver, makeComponent} from './driver';
-export {ContextData} from './context';
+export {ContextData, HandlersContext} from './context';
 export {ScreenSource} from './ScreenSource';
 export {h} from './h';

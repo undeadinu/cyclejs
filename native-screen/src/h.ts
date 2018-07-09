@@ -53,10 +53,7 @@ class Incorporator extends PureComponent<IncoProps, IncoState> {
     ctx: ContextData,
   ): P {
     const handlers = ctx.getSelectorHandlers(this.selector);
-    const handlerEventTypes = Object.keys(handlers);
-    const N = handlerEventTypes.length;
-    for (let i = 0; i < N; ++i) {
-      const evType = handlerEventTypes[i];
+    for (const evType of Object.keys(handlers)) {
       const onFoo = `on${evType[0].toUpperCase()}${evType.slice(1)}`;
       props[onFoo] = (ev: any) => handlers[evType]._n(ev);
     }
