@@ -39,8 +39,9 @@ export class ContextData {
 
   public subscribe(selector: string, listener: () => void) {
     this.listeners[selector] = listener;
+    const that = this;
     return function unsubscribe() {
-      delete this.listeners[selector];
+      delete that.listeners[selector];
     };
   }
 }
