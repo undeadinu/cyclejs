@@ -17,9 +17,10 @@
     "react-native",
     "driver"
   ],
-  "main": "lib/index.js",
-  "typings": "lib/index.d.ts",
-  "types": "lib/index.d.ts",
+  "main": "lib/cjs/index.js",
+  "module": "lib/es6/index.js",
+  "typings": "lib/cjs/index.d.ts",
+  "types": "lib/cjs/index.d.ts",
   "dependencies": {
     "@cycle/run": "*",
     "@types/react-test-renderer": "^16.0.1",
