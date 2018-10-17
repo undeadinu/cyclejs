@@ -1,11 +1,16 @@
 {
-  "private": true,
-  "license": "MIT",
+  "name": "docs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
   "scripts": {
-    "index": "node .scripts/make-index.js",
-    "documentation": "node .scripts/make-documentation.js",
-    "releases": "node .scripts/make-releases.js",
-    "api": "node .scripts/make-api-index.js && cd .. && ./.scripts/yarn-x-for-all-packages.sh run docs && cd docs",
-    "all": "yarn run index && yarn run documentation && yarn run releases && yarn run api"
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "CC-BY-4.0",
+  "devDependencies": {
+    "gh-pages": "^2.0.1",
+    "gitbook-cli": "^2.3.2"
   }
 }
